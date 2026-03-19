@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spanish Word Cards</title>
+  <style>
+    :root {
+      --bg:        #FFF8F0;
+      --card:      #FFFFFF;
+      --primary:   #5B8DEF;
+      --spanish:   #2D3A8C;
+      --en-color:  #2196F3;
+      --zh-color:  #E53935;
+      --text:      #333333;
+      --muted:     #999999;
+      --radius:    16px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── LIST VIEW ─────────────────────────────── */
+    #view-list {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 32px 16px 48px;
+    }
+
+    .app-header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .app-header h1 {
+      font-size: 1.9rem;
+      font-weight: 800;
+      color: var(--spanish);
+    }
+    .app-header p {
+      color: var(--muted);
+      margin-top: 6px;
+      font-size: 0.95rem;
+    }
+
+    #search {
+      width: 100%;
+      padding: 13px 18px;
+      font-size: 1rem;
+      border: 2px solid #E0E0E0;
+      border-radius: var(--radius);
+      margin-bottom: 16px;
+      outline: none;
+      background: white;
+      transition: border-color 0.2s;
+    }
+    #search:focus { border-color: var(--primary); }
+
+    .word-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .word-row {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      cursor: pointer;
+      display: grid;
+      grid-template-columns: 2fr 2fr 1.5fr;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      border: 2px solid transparent;
+      transition: box-shadow 0.18s, border-color 0.18s, transform 0.12s;
+    }
+    .word-row:hover {
+      box-shadow: 0 4px 18px rgba(91,141,239,0.18);
+      border-color: var(--primary);
+      transform: translateY(-1px);
+    }
+    .word-row .col-es { font-size: 1.1rem; font-weight: 700; color: var(--spanish); }
+    .word-row .col-en { font-size: 0.95rem; color: var(--text); }
+    .word-row .col-zh { font-size: 1rem; color: var(--muted); }
+
+    .list-header {
+      display: grid;
+      grid-template-columns: 2fr 2fr 1.5fr;
+      padding: 0 20px 8px;
+      gap: 8px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+    }
+
+    .no-results {
+      text-align: center;
+      color: var(--muted);
+      padding: 40px;
+      font-size: 1.05rem;
+    }
+
+    /* ── FLASHCARD VIEW ────────────────────────── */
+    #view-card {
+      display: none;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .card-topbar {
+      padding: 16px 20px;
+      flex-shrink: 0;
+    }
+
+    .btn-back {
+      background: none;
+      border: 2px solid var(--primary);
+      color: var(--primary);
+      padding: 8px 18px;
+      border-radius: 99px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .btn-back:hover { background: var(--primary); color: white; }
+
+    .card-main {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px 40px;
+      gap: 40px;
+    }
+
+    .card-left {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .word-spanish {
+      font-size: clamp(2.8rem, 7vw, 5.5rem);
+      font-weight: 900;
+      color: var(--spanish);
+      line-height: 1.05;
+      word-break: break-word;
+    }
+
+    .word-sample {
+      font-size: 1.05rem;
+      color: var(--muted);
+      font-style: italic;
+      line-height: 1.5;
+    }
+
+    .card-right {
+      font-size: clamp(5rem, 14vw, 9rem);
+      line-height: 1;
+      flex-shrink: 0;
+      user-select: none;
+    }
+
+    /* ── BOTTOM BAR ────────────────────────────── */
+    .card-bottom {
+      flex-shrink: 0;
+      padding: 12px 24px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* definition panels */
+    .def-panel {
+      background: #EEF3FF;
+      border-radius: 12px;
+      padding: 14px 16px;
+      display: none;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .def-panel.active { display: flex; }
+
+    .def-panel.zh-panel { background: #FFF0F0; }
+
+    .def-text {
+      flex: 1;
+      font-size: 0.95rem;
+      line-height: 1.55;
+      color: var(--text);
+    }
+    .def-text .def-word {
+      display: block;
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    /* action row */
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* language toggle buttons */
+    .btn-lang {
+      padding: 13px 26px;
+      border-radius: 99px;
+      border: none;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s, outline 0.1s;
+    }
+    .btn-lang:active { transform: scale(0.95); }
+    .btn-en { background: var(--en-color); color: white; }
+    .btn-zh { background: var(--zh-color); color: white; }
+    .btn-lang.on { outline: 3px solid #222; outline-offset: 2px; }
+
+    /* mouth buttons */
+    .mouth-btn {
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      flex-shrink: 0;
+      transition: transform 0.1s;
+    }
+    .mouth-btn:active { transform: scale(0.91); }
+
+    .mouth-btn-es {
+      width: 58px; height: 58px;
+      background: var(--primary);
+    }
+    .mouth-btn-en {
+      width: 40px; height: 40px;
+      background: var(--en-color);
+    }
+    .mouth-btn-zh {
+      width: 40px; height: 40px;
+      background: var(--zh-color);
+    }
+
+    /* mouth SVG inside the button */
+    .mouth {
+      overflow: visible;
+    }
+    .m-upper { fill: rgba(255,255,255,0.9); }
+    .m-lower {
+      fill: rgba(255,255,255,0.75);
+      transform-origin: 25px 18px; /* pivot at top center of lower lip */
+    }
+    .mouth-btn.speaking .m-lower {
+      animation: lip 0.22s ease-in-out infinite alternate;
+    }
+    @keyframes lip {
+      from { transform: scaleY(1); }
+      to   { transform: scaleY(2.8); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════ LIST VIEW ═══════════════ -->
+<div id="view-list">
+  <div class="app-header">
+    <h1>🌟 Spanish Word Cards</h1>
+    <p>Tap any word to open its flashcard</p>
+  </div>
+
+  <input id="search" type="search" placeholder="🔍  Search in Spanish, English, or 中文…" autocomplete="off">
+
+  <div class="list-header">
+    <span>Spanish</span>
+    <span>English</span>
+    <span>中文</span>
+  </div>
+
+  <div class="word-list" id="word-list"></div>
+</div>
+
+<!-- ═══════════════ FLASHCARD VIEW ═══════════════ -->
+<div id="view-card">
+
+  <div class="card-topbar">
+    <button class="btn-back" id="btn-back">← Back</button>
+  </div>
+
+  <div class="card-main">
+    <div class="card-left">
+      <div class="word-spanish" id="card-spanish"></div>
+      <div class="word-sample"  id="card-sample"></div>
+    </div>
+    <div class="card-right" id="card-emoji"></div>
+  </div>
+
+  <div class="card-bottom">
+
+    <!-- English definition panel (hidden until toggled) -->
+    <div class="def-panel en-panel" id="panel-en">
+      <div class="def-text" id="text-en"></div>
+      <button class="mouth-btn mouth-btn-en" id="btn-say-en" title="Hear English">
+        <svg class="mouth" width="22" height="14" viewBox="0 0 50 30">
+          <path class="m-upper" d="M5 18 Q12 8 25 14 Q38 8 45 18 Q25 13 5 18Z"/>
+          <path class="m-lower" d="M5 18 Q25 27 45 18 Q25 21 5 18Z"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Chinese definition panel (hidden until toggled) -->
+    <div class="def-panel zh-panel" id="panel-zh">
+      <div class="def-text" id="text-zh"></div>
+      <button class="mouth-btn mouth-btn-zh" id="btn-say-zh" title="Hear Chinese">
+        <svg class="mouth" width="22" height="14" viewBox="0 0 50 30">
+          <path class="m-upper" d="M5 18 Q12 8 25 14 Q38 8 45 18 Q25 13 5 18Z"/>
+          <path class="m-lower" d="M5 18 Q25 27 45 18 Q25 21 5 18Z"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Main button row -->
+    <div class="btn-row">
+      <button class="mouth-btn mouth-btn-es" id="btn-say-es" title="Hear Spanish">
+        <svg class="mouth" width="30" height="18" viewBox="0 0 50 30">
+          <path class="m-upper" d="M5 18 Q12 8 25 14 Q38 8 45 18 Q25 13 5 18Z"/>
+          <path class="m-lower" d="M5 18 Q25 27 45 18 Q25 21 5 18Z"/>
+        </svg>
+      </button>
+      <button class="btn-lang btn-en" id="btn-toggle-en">English</button>
+      <button class="btn-lang btn-zh" id="btn-toggle-zh">中文</button>
+    </div>
+
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script>
+// ─────────────────────────────────────────────
+//  Speech
+// ─────────────────────────────────────────────
+function speak(text, lang, btn) {
+  if (!('speechSynthesis' in window)) {
+    alert('Your browser does not support speech synthesis.');
+    return;
+  }
+  speechSynthesis.cancel();
+
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = lang;
+  utter.rate = 0.85;
+
+  const allBtns = document.querySelectorAll('.mouth-btn');
+  utter.onstart = () => {
+    allBtns.forEach(b => b.classList.remove('speaking'));
+    if (btn) btn.classList.add('speaking');
+  };
+  utter.onend = utter.onerror = () => {
+    allBtns.forEach(b => b.classList.remove('speaking'));
+  };
+  speechSynthesis.speak(utter);
+}
+
+// ─────────────────────────────────────────────
+//  List view
+// ─────────────────────────────────────────────
+function renderList(query) {
+  const q = (query || '').toLowerCase().trim();
+  const container = document.getElementById('word-list');
+
+  const filtered = WORD_DATA.filter(w =>
+    !q ||
+    w.spanish.toLowerCase().includes(q) ||
+    w.english.toLowerCase().includes(q) ||
+    w.chinese.includes(q)
+  );
+
+  if (!filtered.length) {
+    container.innerHTML = '<div class="no-results">No words found 🔍</div>';
+    return;
+  }
+
+  container.innerHTML = filtered.map(w => {
+    const idx = WORD_DATA.indexOf(w);
+    return `<div class="word-row" data-idx="${idx}">
+      <span class="col-es">${w.spanish}</span>
+      <span class="col-en">${w.english}</span>
+      <span class="col-zh">${w.chinese}</span>
+    </div>`;
+  }).join('');
+
+  container.querySelectorAll('.word-row').forEach(row => {
+    row.addEventListener('click', () => showCard(+row.dataset.idx));
+  });
+}
+
+// ─────────────────────────────────────────────
+//  Flashcard view
+// ─────────────────────────────────────────────
+let current = null;
+
+function showCard(idx) {
+  current = WORD_DATA[idx];
+
+  document.getElementById('card-spanish').textContent = current.spanish;
+  document.getElementById('card-sample').textContent  = current.sample_sentence;
+  document.getElementById('card-emoji').textContent   = current.emoji;
+
+  document.getElementById('text-en').innerHTML =
+    `<span class="def-word">${current.english}</span>${current.definition}`;
+
+  document.getElementById('text-zh').innerHTML =
+    `<span class="def-word">${current.chinese}</span>${current.english} in Chinese`;
+
+  // Reset panels & buttons
+  ['panel-en','panel-zh'].forEach(id => document.getElementById(id).classList.remove('active'));
+  ['btn-toggle-en','btn-toggle-zh'].forEach(id => document.getElementById(id).classList.remove('on'));
+  document.querySelectorAll('.mouth-btn').forEach(b => b.classList.remove('speaking'));
+  speechSynthesis.cancel();
+
+  document.getElementById('view-list').style.display = 'none';
+  document.getElementById('view-card').style.display = 'flex';
+}
+
+function showList() {
+  speechSynthesis.cancel();
+  document.querySelectorAll('.mouth-btn').forEach(b => b.classList.remove('speaking'));
+  document.getElementById('view-card').style.display = 'none';
+  document.getElementById('view-list').style.display = 'block';
+}
+
+function togglePanel(panelId, btnId, otherPanelId, otherBtnId) {
+  const isOn = document.getElementById(panelId).classList.contains('active');
+  document.getElementById(otherPanelId).classList.remove('active');
+  document.getElementById(otherBtnId).classList.remove('on');
+  document.getElementById(panelId).classList.toggle('active', !isOn);
+  document.getElementById(btnId).classList.toggle('on', !isOn);
+}
+
+// ─────────────────────────────────────────────
+//  Event wiring
+// ─────────────────────────────────────────────
+document.getElementById('search')
+  .addEventListener('input', e => renderList(e.target.value));
+
+document.getElementById('btn-back')
+  .addEventListener('click', showList);
+
+document.getElementById('btn-say-es')
+  .addEventListener('click', () => speak(current.spanish, 'es-ES', document.getElementById('btn-say-es')));
+
+document.getElementById('btn-say-en')
+  .addEventListener('click', () => speak(current.english, 'en-US', document.getElementById('btn-say-en')));
+
+document.getElementById('btn-say-zh')
+  .addEventListener('click', () => speak(current.chinese, 'zh-CN', document.getElementById('btn-say-zh')));
+
+document.getElementById('btn-toggle-en')
+  .addEventListener('click', () => togglePanel('panel-en','btn-toggle-en','panel-zh','btn-toggle-zh'));
+
+document.getElementById('btn-toggle-zh')
+  .addEventListener('click', () => togglePanel('panel-zh','btn-toggle-zh','panel-en','btn-toggle-en'));
+
+// ─────────────────────────────────────────────
+//  Init
+// ─────────────────────────────────────────────
+renderList();
+</script>
+</body>
+</html>
