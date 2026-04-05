@@ -455,9 +455,6 @@ function enableDragOnRows() {
       }, { passive: false });
     }
   });
-
-  document.addEventListener('touchmove', onTouchMove, { passive: false });
-  document.addEventListener('touchend', onTouchEnd);
 }
 
 function onTouchMove(e) {
@@ -478,8 +475,6 @@ function onTouchEnd() {
     touchDropTarget.classList.remove('drag-over');
     reorderWords(dragEl.dataset.english, touchDropTarget.dataset.english);
   }
-  document.removeEventListener('touchmove', onTouchMove);
-  document.removeEventListener('touchend', onTouchEnd);
   dragEl = null;
   touchDropTarget = null;
 }
@@ -874,6 +869,10 @@ document.getElementById('input-english').addEventListener('keydown', e => {
 // ─────────────────────────────────────────────
 //  Init
 // ─────────────────────────────────────────────
+// Document-level touch listeners for drag — registered once so they persist across re-renders
+document.addEventListener('touchmove', onTouchMove, { passive: false });
+document.addEventListener('touchend', onTouchEnd);
+
 renderList();
 </script>
 </body>
