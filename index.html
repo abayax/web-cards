@@ -35,19 +35,17 @@
       padding: 32px 16px 48px;
     }
 
-    .app-header {
-      position: relative;
-      text-align: center;
-      margin-bottom: 28px;
+    .app-header { margin-bottom: 28px; }
+    .app-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
     }
-    .app-header h1 { font-size: 1.9rem; font-weight: 800; color: var(--spanish); }
-    .app-header p  { color: var(--muted); margin-top: 6px; font-size: 0.95rem; }
+    .app-header h1 { font-size: 1.9rem; font-weight: 800; color: var(--spanish); flex: 1; text-align: center; }
+    .app-header p  { color: var(--muted); margin-top: 6px; font-size: 0.95rem; text-align: center; }
 
     .btn-edit-toggle {
-      position: absolute;
-      right: 0;
-      top: 50%;
-      transform: translateY(-50%);
       background: none;
       border: 2px solid var(--muted);
       color: var(--muted);
@@ -75,7 +73,7 @@
 
     .list-header {
       display: grid;
-      grid-template-columns: 2fr 2fr 1.5fr;
+      grid-template-columns: 2rem 2fr 2fr 1.5fr;
       padding: 0 20px 8px;
       gap: 8px;
       font-size: 0.78rem;
@@ -94,7 +92,7 @@
       padding: 14px 20px;
       cursor: pointer;
       display: grid;
-      grid-template-columns: 2fr 2fr 1.5fr;
+      grid-template-columns: 2rem 2fr 2fr 1.5fr;
       align-items: center;
       gap: 8px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.06);
@@ -102,7 +100,7 @@
       transition: box-shadow 0.18s, border-color 0.18s, transform 0.12s;
     }
     .word-row:hover { box-shadow: 0 4px 18px rgba(91,141,239,0.18); border-color: var(--primary); transform: translateY(-1px); }
-    .word-row.edit-mode { grid-template-columns: 36px 2fr 2fr 1.5fr; cursor: default; }
+    .word-row.edit-mode { grid-template-columns: 36px 2rem 2fr 2fr 1.5fr; cursor: default; }
     .word-row.edit-mode:hover { transform: none; border-color: transparent; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
 
     .word-row .col-es { font-size: 1.1rem; font-weight: 700; color: var(--spanish); }
@@ -435,9 +433,12 @@
 <!-- ═══════════════ LIST VIEW ═══════════════ -->
 <div id="view-list">
   <div class="app-header">
-    <h1>🌟 Spanish Word Cards</h1>
+    <div class="app-title-row">
+      <div style="width:58px"></div>
+      <h1>🌟 Spanish Word Cards</h1>
+      <button class="btn-edit-toggle" id="btn-edit-toggle">Edit</button>
+    </div>
     <p>Tap any word to open its flashcard</p>
-    <button class="btn-edit-toggle" id="btn-edit-toggle">Edit</button>
   </div>
 
   <input id="search" type="search" placeholder="🔍  Search in Spanish, English, or 中文…" autocomplete="off">
@@ -649,8 +650,8 @@ function renderList(query) {
   const words     = getAllWords();
 
   header.className = editMode ? 'list-header edit-mode' : 'list-header';
-  if (editMode) header.innerHTML = '<span></span><span>Spanish</span><span>English</span><span>中文</span>';
-  else          header.innerHTML = '<span>Spanish</span><span>English</span><span>中文</span>';
+  if (editMode) header.innerHTML = '<span></span><span></span><span>Spanish</span><span>English</span><span>中文</span>';
+  else          header.innerHTML = '<span></span><span>Spanish</span><span>English</span><span>中文</span>';
 
   const filtered = words.filter(w =>
     !q ||
@@ -665,16 +666,19 @@ function renderList(query) {
   }
 
   container.innerHTML = filtered.map(w => {
-    const idx = words.indexOf(w);
+    const idx   = words.indexOf(w);
+    const emoji = w.emoji || '📖';
     if (editMode) {
       return `<div class="word-row edit-mode" data-idx="${idx}">
         <button class="btn-delete" data-english="${w.english}" title="Delete">×</button>
+        <span style="font-size:1.3rem">${emoji}</span>
         <span class="col-es">${w.spanish}</span>
         <span class="col-en">${w.english}</span>
         <span class="col-zh">${w.chinese}</span>
       </div>`;
     }
     return `<div class="word-row" data-idx="${idx}">
+      <span style="font-size:1.3rem">${emoji}</span>
       <span class="col-es">${w.spanish}</span>
       <span class="col-en">${w.english}</span>
       <span class="col-zh">${w.chinese}</span>
@@ -890,13 +894,63 @@ document.getElementById('input-english').addEventListener('keydown', e => {
 // ─────────────────────────────────────────────
 const EP = {
   cat: 'all',
+  // Each entry: [emoji, keywords]
   data: {
-    '😊': ['😀','😃','😄','😁','😆','😅','🤣','😂','🙂','😊','😇','🥰','😍','😘','😜','😎','🥳','😢','😡','🤔','🤗','😴','🤯','🥺','😱'],
-    '🐾': ['🐶','🐱','🐭','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐸','🐵','🐔','🐧','🦆','🦉','🐘','🦒','🦓','🦋','🐝','🐢','🐬','🦈','🐙','🦜','🦔','🐺','🦌','🐴','🦄','🐑','🐇','🦝','🐿️'],
-    '🍎': ['🍎','🍊','🍋','🍇','🍓','🍒','🍑','🥭','🍍','🥝','🍌','🍐','🫐','🍅','🥑','🍆','🥦','🥕','🌽','🍄','🥜','🍞','🧀','🥚','🍳','🍔','🍟','🍕','🌮','🍜','🍣','🍩','🍪','🎂','🍰','🍫','🍭','☕','🧃','🥤'],
-    '🏠': ['🏠','🏫','🏥','🏖️','🏔️','🌋','🗼','🗽','🎡','🎢','🎠','🎪','🎭','🎨','🖼️','📚','📖','✏️','🖊️','🎒','💻','📱','⌚','🎁','🎈','🎉','🔑','💡','🔦','🧸','🪀','⚽','🏀','🎮','🧩','🎯','🎸','🎹','🥁'],
-    '🌸': ['🌸','🌼','🌻','🌺','🌹','🌷','🌱','🌿','🍀','🎋','🍃','🍂','🍁','🌾','🌵','🎄','🌲','🌳','🌴','🌊','🌈','☀️','🌙','⭐','❄️','🌬️','🌀','⛅','🌧️','⛈️','🌩️','🌨️','🌍','🌏'],
-    '✈️': ['✈️','🚀','🚂','🚗','🚕','🚌','🚎','🏎️','🚓','🚑','🚒','🚐','🛻','🚚','🛵','🚲','🛴','🛺','⛵','🚤','🛥️','🛳️','🚁','🛸','🪂','⛽','🚦','🗺️','🧭'],
+    '😊': [
+      ['😀','happy smile grin'],['😂','laugh cry funny'],['🥰','love heart cute'],['😍','love eyes adore'],
+      ['😎','cool sunglasses'],['🥳','party celebrate'],['😢','sad cry tear'],['😡','angry mad'],
+      ['🤔','think wonder'],['😴','sleep tired'],['😱','scared shock'],['🤗','hug warm'],
+      ['😇','angel good'],['😜','wink silly tongue'],['🤯','mind blown'],['🥺','pleading sad cute'],
+    ],
+    '🐾': [
+      ['🐶','dog puppy pet'],['🐱','cat kitten pet'],['🐭','mouse rat'],['🐰','rabbit bunny'],
+      ['🦊','fox'],['🐻','bear'],['🐼','panda bear'],['🐨','koala bear'],['🐯','tiger cat'],
+      ['🦁','lion big cat'],['🐮','cow moo'],['🐷','pig oink'],['🐸','frog green'],
+      ['🐵','monkey ape'],['🐔','chicken hen bird'],['🐧','penguin bird'],['🦆','duck bird'],
+      ['🦉','owl bird'],['🐘','elephant trunk'],['🦒','giraffe tall'],['🦓','zebra stripe'],
+      ['🦋','butterfly insect'],['🐝','bee insect honey'],['🐢','turtle slow'],['🐬','dolphin swim'],
+      ['🦈','shark fish ocean'],['🐙','octopus sea'],['🦜','parrot bird colorful'],['🦔','hedgehog spiky'],
+      ['🐺','wolf dog wild'],['🦌','deer antler'],['🐴','horse ride'],['🦄','unicorn magic horse'],
+      ['🐑','sheep wool lamb'],['🐇','rabbit bunny hop'],['🐿️','squirrel nut'],['🦝','raccoon'],
+    ],
+    '🍎': [
+      ['🍎','apple fruit red'],['🍊','orange fruit'],['🍋','lemon yellow sour'],['🍇','grapes fruit purple'],
+      ['🍓','strawberry fruit red'],['🍒','cherry fruit red'],['🍑','peach fruit'],['🥭','mango fruit'],
+      ['🍍','pineapple tropical'],['🥝','kiwi fruit green'],['🍌','banana yellow fruit'],['🍐','pear fruit'],
+      ['🫐','blueberry fruit'],['🍅','tomato red'],['🥑','avocado green'],['🍆','eggplant purple vegetable'],
+      ['🥦','broccoli vegetable green'],['🥕','carrot orange vegetable'],['🌽','corn yellow vegetable'],
+      ['🍄','mushroom'],['🥜','peanut nut'],['🍞','bread'],['🧀','cheese yellow'],['🥚','egg'],
+      ['🍔','burger hamburger'],['🍟','fries potato'],['🍕','pizza'],['🌮','taco mexican'],
+      ['🍜','noodles soup'],['🍣','sushi japanese fish'],['🍩','donut sweet'],['🍪','cookie sweet bake'],
+      ['🎂','cake birthday'],['🍰','cake slice sweet'],['🍫','chocolate sweet'],['🍭','lollipop candy sweet'],
+      ['☕','coffee hot drink'],['🧃','juice drink'],['🥤','drink cup soda'],
+    ],
+    '🏠': [
+      ['🏠','house home'],['🏫','school building'],['🏥','hospital doctor'],['🏖️','beach sand sea'],
+      ['🏔️','mountain snow'],['📚','books read study'],['📖','book open read'],['✏️','pencil write draw'],
+      ['🎒','backpack bag school'],['💻','computer laptop'],['📱','phone mobile'],['⌚','watch time'],
+      ['🎁','gift present'],['🎈','balloon party'],['🎉','party celebrate confetti'],['🔑','key lock'],
+      ['💡','lightbulb idea'],['🧸','teddy bear toy'],['🪀','yoyo toy'],['⚽','soccer ball sport'],
+      ['🏀','basketball ball sport'],['🎮','game controller video'],['🧩','puzzle piece'],
+      ['🎯','target dart'],['🎸','guitar music'],['🎹','piano music keyboard'],['🥁','drums music'],
+    ],
+    '🌸': [
+      ['🌸','cherry blossom flower pink'],['🌼','daisy flower yellow'],['🌻','sunflower yellow'],
+      ['🌺','hibiscus flower red'],['🌹','rose flower red love'],['🌷','tulip flower'],
+      ['🌱','seedling plant grow'],['🌿','herb plant green'],['🍀','clover luck green'],
+      ['🍃','leaf green plant'],['🍂','autumn leaf fall'],['🍁','maple leaf fall red'],
+      ['🌵','cactus desert'],['🎄','christmas tree'],['🌲','tree pine'],['🌳','tree park'],
+      ['🌴','palm tree tropical'],['🌊','wave ocean sea water'],['🌈','rainbow colorful'],
+      ['☀️','sun sunny bright'],['🌙','moon night'],['⭐','star night sky'],
+      ['❄️','snowflake winter cold ice'],['🌍','earth world globe'],
+    ],
+    '✈️': [
+      ['✈️','airplane fly travel'],['🚀','rocket space'],['🚂','train locomotive'],
+      ['🚗','car drive red'],['🚕','taxi yellow cab'],['🚌','bus school transport'],
+      ['🚲','bicycle bike ride'],['🛴','scooter ride'],['⛵','sailboat sea'],
+      ['🚤','speedboat water'],['🚁','helicopter fly'],['🛸','ufo alien space'],
+      ['🗺️','map travel'],['🧭','compass direction navigate'],
+    ],
   },
 };
 
@@ -912,15 +966,14 @@ const EP = {
     `<button class="ep-cat${k==='all'?' active':''}" data-cat="${k}">${label}</button>`
   ).join('');
 
-  function allEmojis() { return Object.values(EP.data).flat(); }
+  function allEntries() { return Object.values(EP.data).flat(); }
 
   function renderGrid() {
-    const q    = search.value.trim();
-    const pool = EP.cat === 'all' ? allEmojis() : (EP.data[EP.cat] || []);
-    // Simple search: filter by position match against stringified emoji (limited but functional)
-    const list = q ? allEmojis().filter(e => e.includes(q)) : pool;
+    const q    = search.value.toLowerCase().trim();
+    const pool = EP.cat === 'all' ? allEntries() : (EP.data[EP.cat] || []);
+    const list = q ? allEntries().filter(([, k]) => k.includes(q)) : pool;
     if (!list.length) { grid.innerHTML = '<div class="ep-empty">No results</div>'; return; }
-    grid.innerHTML = list.map(e => `<span class="ep-emoji" data-e="${e}">${e}</span>`).join('');
+    grid.innerHTML = list.map(([e]) => `<span class="ep-emoji" data-e="${e}">${e}</span>`).join('');
   }
 
   catBar.addEventListener('click', e => {
