@@ -58,12 +58,11 @@ def generate_word_data(words: list[str]) -> list[dict]:
 Words: {', '.join(words)}
 
 Return ONLY a JSON array. Each object must have exactly these keys:
-  "english"        – the original English word
-  "spanish"        – Spanish translation (word or short phrase)
-  "chinese"        – simplified Chinese translation (word or short phrase)
-  "definition"     – one plain-English sentence a young child can understand
-  "sample_sentence"– a simple Spanish sentence using the Spanish word (5-8 words)
-  "emoji"          – a single emoji that best represents the word
+  "english"    – the original English word
+  "spanish"    – Spanish translation (word or short phrase)
+  "chinese"    – simplified Chinese translation (word or short phrase)
+  "definition" – one plain-English sentence a young child can understand
+  "emoji"      – a single emoji that best represents the word
 
 Example element:
 {{
@@ -71,7 +70,6 @@ Example element:
   "spanish": "gato",
   "chinese": "猫",
   "definition": "A small furry animal that purrs and says meow.",
-  "sample_sentence": "El gato duerme en el sofá.",
   "emoji": "🐱"
 }}"""
 

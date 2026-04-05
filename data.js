@@ -4,24 +4,21 @@ const WORD_DATA = [
     "english": "apple",
     "spanish": "manzana",
     "chinese": "苹果",
-    "definition": "A round, crunchy fruit that can be red, green, or yellow.",
-    "sample_sentence": "La manzana roja es muy dulce.",
+    "definition": "A round fruit that can be red, green, or yellow and is sweet and crunchy to eat.",
     "emoji": "🍎"
   },
   {
     "english": "elephant",
     "spanish": "elefante",
     "chinese": "大象",
-    "definition": "A very big animal with a long nose called a trunk.",
-    "sample_sentence": "El elefante grande bebe mucha agua.",
+    "definition": "A very big gray animal with a long nose called a trunk that it uses to pick things up.",
     "emoji": "🐘"
   },
   {
     "english": "hello",
     "spanish": "hola",
     "chinese": "你好",
-    "definition": "A friendly word you say when you meet someone.",
-    "sample_sentence": "Hola, ¿cómo estás hoy amigo?",
+    "definition": "A friendly word you say when you meet someone or want to get their attention.",
     "emoji": "👋"
   }
 ];
