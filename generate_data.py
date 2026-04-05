@@ -61,6 +61,7 @@ Return ONLY a JSON array. Each object must have exactly these keys:
   "english"    – the original English word
   "spanish"    – Spanish translation (word or short phrase)
   "chinese"    – simplified Chinese translation (word or short phrase)
+  "japanese"   – Japanese translation (word or short phrase, use hiragana/katakana/kanji as appropriate)
   "definition" – one plain-English sentence a young child can understand
   "emoji"      – a single emoji that best represents the word
 
@@ -69,6 +70,7 @@ Example element:
   "english": "cat",
   "spanish": "gato",
   "chinese": "猫",
+  "japanese": "ねこ",
   "definition": "A small furry animal that purrs and says meow.",
   "emoji": "🐱"
 }}"""

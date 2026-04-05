@@ -4,6 +4,7 @@ const WORD_DATA = [
     "english": "apple",
     "spanish": "manzana",
     "chinese": "苹果",
+    "japanese": "りんご",
     "definition": "A round fruit that can be red, green, or yellow and is sweet and crunchy to eat.",
     "emoji": "🍎"
   },
@@ -11,13 +12,15 @@ const WORD_DATA = [
     "english": "elephant",
     "spanish": "elefante",
     "chinese": "大象",
-    "definition": "A very big gray animal with a long nose called a trunk that it uses to pick things up.",
+    "japanese": "ぞう",
+    "definition": "A very big animal with a long nose called a trunk that it uses to pick things up.",
     "emoji": "🐘"
   },
   {
     "english": "hello",
     "spanish": "hola",
     "chinese": "你好",
+    "japanese": "こんにちは",
     "definition": "A friendly word you say when you meet someone or want to get their attention.",
     "emoji": "👋"
   }
