@@ -54,8 +54,8 @@
 
     .word-row { background: var(--card); border-radius: var(--radius); padding: 13px 16px; cursor: pointer; display: grid; grid-template-columns: 2rem 2fr 2fr 2fr 2fr; align-items: center; gap: 8px; box-shadow: 0 2px 8px rgba(0,0,0,.06); border: 2px solid transparent; transition: box-shadow .18s, border-color .18s, transform .1s; }
     .word-row:hover { box-shadow: 0 4px 16px rgba(91,141,239,.18); border-color: var(--primary); transform: translateY(-1px); }
-    .word-row.edit-mode { grid-template-columns: 36px 2rem 2fr 2fr 2fr 2fr 28px; cursor: default; }
-    .word-row.edit-mode:hover { transform: none; border-color: transparent; box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+    .word-row.edit-mode { grid-template-columns: 36px 2rem 2fr 2fr 2fr 2fr 28px; cursor: pointer; }
+    .word-row.edit-mode:hover { transform: none; border-color: #DDD; box-shadow: 0 2px 8px rgba(0,0,0,.06); }
     .word-row.dragging { opacity: .4; }
     .word-row.drag-over { border-color: var(--primary); border-style: dashed; }
 
@@ -298,19 +298,24 @@
 // ─────────────────────────────────────────────
 //  LocalStorage keys
 // ─────────────────────────────────────────────
-const LS_ADDED   = 'wc_added';
-const LS_DELETED = 'wc_deleted';
-const LS_ORDER   = 'wc_order';
+const LS_ADDED     = 'wc_added';
+const LS_DELETED   = 'wc_deleted';
+const LS_ORDER     = 'wc_order';
+const LS_OVERRIDES = 'wc_overrides';
 
-function getAdded()   { return JSON.parse(localStorage.getItem(LS_ADDED)   || '[]'); }
-function getDeleted() { return JSON.parse(localStorage.getItem(LS_DELETED) || '[]'); }
-function getOrder()   { return JSON.parse(localStorage.getItem(LS_ORDER)   || '[]'); }
+function getAdded()     { return JSON.parse(localStorage.getItem(LS_ADDED)     || '[]'); }
+function getDeleted()   { return JSON.parse(localStorage.getItem(LS_DELETED)   || '[]'); }
+function getOrder()     { return JSON.parse(localStorage.getItem(LS_ORDER)     || '[]'); }
+function getOverrides() { return JSON.parse(localStorage.getItem(LS_OVERRIDES) || '{}'); }
 
 function getAllWords() {
-  const base    = (typeof WORD_DATA !== 'undefined') ? WORD_DATA : [];
-  const added   = getAdded();
-  const deleted = getDeleted();
-  return [...base, ...added].filter(w => !deleted.includes(w.english.toLowerCase()));
+  const base      = (typeof WORD_DATA !== 'undefined') ? WORD_DATA : [];
+  const added     = getAdded();
+  const deleted   = getDeleted();
+  const overrides = getOverrides();
+  return [...base, ...added]
+    .filter(w => !deleted.includes(w.english.toLowerCase()))
+    .map(w => overrides[w.english.toLowerCase()] || w);
 }
 
 function deleteWord(english) {
@@ -323,6 +328,12 @@ function saveAddedWord(word) {
   const added = getAdded();
   added.push({ ...word, created_at: new Date().toISOString() });
   localStorage.setItem(LS_ADDED, JSON.stringify(added));
+}
+
+function saveOverride(originalEnglish, updatedWord) {
+  const overrides = getOverrides();
+  overrides[originalEnglish.toLowerCase()] = updatedWord;
+  localStorage.setItem(LS_OVERRIDES, JSON.stringify(overrides));
 }
 
 function saveOrder(keys) { localStorage.setItem(LS_ORDER, JSON.stringify(keys)); }
@@ -542,6 +553,13 @@ function renderList(query) {
         if (confirm(`Delete "${btn.dataset.english}"?`)) { deleteWord(btn.dataset.english); renderList(); }
       });
     });
+    container.querySelectorAll('.word-row.edit-mode').forEach(row => {
+      row.addEventListener('click', e => {
+        if (e.target.closest('.btn-delete') || e.target.closest('.drag-handle')) return;
+        const w = getAllWords().find(x => x.english === row.dataset.english);
+        if (w) showAddView(w);
+      });
+    });
     if (isDraggable) enableDragOnRows();
   } else {
     container.querySelectorAll('.word-row').forEach(row => {
@@ -608,20 +626,41 @@ function togglePanel(panelId, btnId, others) {
 //  Add word view
 // ─────────────────────────────────────────────
 let pendingAudioUrl = '';
+let editingWord = null; // null = adding new word; object = editing existing word
 
-function showAddView() {
-  ['input-english','input-spanish','input-chinese','input-japanese','input-definition','input-emoji']
-    .forEach(id => { const el = document.getElementById(id); el.value = ''; el.classList.remove('auto-filled','error'); });
+function showAddView(wordToEdit) {
+  editingWord = wordToEdit || null;
+  const isEdit = !!editingWord;
+
+  document.querySelector('.add-topbar h2').textContent = isEdit ? 'Edit Word' : 'Add New Word';
+
+  const fields = ['input-english','input-spanish','input-chinese','input-japanese','input-definition','input-emoji'];
+  const values = isEdit
+    ? [editingWord.english, editingWord.spanish, editingWord.chinese, editingWord.japanese, editingWord.definition, editingWord.emoji]
+    : ['','','','','',''];
+
+  fields.forEach((id, i) => {
+    const el = document.getElementById(id);
+    el.value = values[i] || '';
+    el.classList.remove('auto-filled', 'error');
+  });
+
+  const engInput = document.getElementById('input-english');
+  engInput.readOnly = isEdit;
+  engInput.style.opacity = isEdit ? '0.6' : '';
+
   const status = document.getElementById('add-status');
   status.textContent = '';
   status.className = 'status-msg';
-  pendingAudioUrl = '';
+  pendingAudioUrl = isEdit ? (editingWord.audio_en_url || '') : '';
+
   document.getElementById('view-list').style.display = 'none';
   document.getElementById('view-add').style.display  = 'flex';
-  setTimeout(() => document.getElementById('input-english').focus(), 100);
+  if (!isEdit) setTimeout(() => document.getElementById('input-english').focus(), 100);
 }
 
 function hideAddView() {
+  editingWord = null;
   document.getElementById('view-add').style.display  = 'none';
   document.getElementById('view-list').style.display = 'block';
 }
@@ -679,7 +718,15 @@ function doSaveWord() {
     return;
   }
 
-  saveAddedWord({ english, spanish, chinese, japanese, definition, emoji, audio_en_url: pendingAudioUrl });
+  if (editingWord) {
+    saveOverride(editingWord.english, {
+      ...editingWord,
+      english, spanish, chinese, japanese, definition, emoji,
+      audio_en_url: pendingAudioUrl || editingWord.audio_en_url || '',
+    });
+  } else {
+    saveAddedWord({ english, spanish, chinese, japanese, definition, emoji, audio_en_url: pendingAudioUrl });
+  }
   hideAddView();
   renderList();
 }
