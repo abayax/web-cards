@@ -1,0 +1,12 @@
+Mac:
+  1. Add English words to words.txt (one per line)         
+  2. Run `ANTHROPIC_BASE_URL=http://localhost:5522 python generate_data.py` — this updates data.js                                                                   
+  3. Open index.html in your browser — it reads data.js directly, no server needed
+                                                                                                                                                                   
+  That's it. The HTML file is fully self-contained and loads everything from local files.
+
+iPhone:
+  1. Update data on Mac.
+  2. AirDrop standalone.html to your iPhone                                                                                                                        
+  3. On iPhone, tap "Save to Files" when it arrives                                                                                                                
+  4. Open the Files app, tap standalone.html — it opens in Safari
