@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Spanish Word Cards</title>
+
   <style>
     :root {
       --bg:       #FFF8F0;
@@ -349,7 +350,84 @@
     }
     .btn-save:disabled { opacity: 0.4; cursor: default; }
 
-    .emoji-hint { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+    .emoji-row { display: flex; gap: 8px; align-items: center; }
+    .emoji-row .form-input { flex: 1; font-size: 1.4rem; text-align: center; }
+
+    .btn-emoji-pick {
+      padding: 13px 14px;
+      background: #F5F5F5;
+      border: 2px solid #E0E0E0;
+      border-radius: 12px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: border-color 0.15s;
+    }
+    .btn-emoji-pick:hover { border-color: var(--primary); }
+
+    .ep-wrap {
+      display: none;
+      background: white;
+      border: 2px solid #E0E0E0;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .ep-wrap.open { display: flex; flex-direction: column; }
+
+    .ep-search-row {
+      padding: 8px;
+      border-bottom: 1px solid #EEE;
+    }
+    .ep-search-input {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1.5px solid #E0E0E0;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      outline: none;
+    }
+    .ep-search-input:focus { border-color: var(--primary); }
+
+    .ep-cats {
+      display: flex;
+      gap: 2px;
+      padding: 6px 8px;
+      border-bottom: 1px solid #EEE;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .ep-cats::-webkit-scrollbar { display: none; }
+    .ep-cat {
+      padding: 4px 8px;
+      border: none;
+      background: none;
+      border-radius: 6px;
+      font-size: 1.1rem;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background 0.1s;
+    }
+    .ep-cat:hover  { background: #F0F0F0; }
+    .ep-cat.active { background: #E3EAFF; }
+
+    .ep-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2px;
+      padding: 8px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .ep-emoji {
+      font-size: 1.5rem;
+      padding: 5px;
+      border-radius: 6px;
+      cursor: pointer;
+      line-height: 1;
+      transition: background 0.1s;
+    }
+    .ep-emoji:hover { background: #F0F0F0; }
+    .ep-empty { padding: 16px; color: var(--muted); font-size: 0.9rem; width: 100%; text-align: center; }
   </style>
 </head>
 <body>
@@ -458,8 +536,17 @@
 
     <div class="form-group">
       <label>Emoji</label>
-      <input class="form-input" id="input-emoji" type="text" placeholder="🦋" maxlength="4">
-      <span class="emoji-hint">Tap to open emoji keyboard (🌐 or 😊 on your keyboard)</span>
+      <div class="emoji-row">
+        <input class="form-input" id="input-emoji" type="text" placeholder="🦋" maxlength="4">
+        <button class="btn-emoji-pick" id="btn-emoji-pick" type="button" title="Pick emoji">😊</button>
+      </div>
+      <div class="ep-wrap" id="ep-wrap">
+        <div class="ep-search-row">
+          <input class="ep-search-input" id="ep-search" type="text" placeholder="Search…" autocomplete="off">
+        </div>
+        <div class="ep-cats" id="ep-cats"></div>
+        <div class="ep-grid" id="ep-grid"></div>
+      </div>
     </div>
   </div>
 
@@ -797,6 +884,78 @@ document.getElementById('btn-save-word').addEventListener('click', doSaveWord);
 document.getElementById('input-english').addEventListener('keydown', e => {
   if (e.key === 'Enter') doLookup();
 });
+
+// ─────────────────────────────────────────────
+//  Emoji picker (self-contained)
+// ─────────────────────────────────────────────
+const EP = {
+  cat: 'all',
+  data: {
+    '😊': ['😀','😃','😄','😁','😆','😅','🤣','😂','🙂','😊','😇','🥰','😍','😘','😜','😎','🥳','😢','😡','🤔','🤗','😴','🤯','🥺','😱'],
+    '🐾': ['🐶','🐱','🐭','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐸','🐵','🐔','🐧','🦆','🦉','🐘','🦒','🦓','🦋','🐝','🐢','🐬','🦈','🐙','🦜','🦔','🐺','🦌','🐴','🦄','🐑','🐇','🦝','🐿️'],
+    '🍎': ['🍎','🍊','🍋','🍇','🍓','🍒','🍑','🥭','🍍','🥝','🍌','🍐','🫐','🍅','🥑','🍆','🥦','🥕','🌽','🍄','🥜','🍞','🧀','🥚','🍳','🍔','🍟','🍕','🌮','🍜','🍣','🍩','🍪','🎂','🍰','🍫','🍭','☕','🧃','🥤'],
+    '🏠': ['🏠','🏫','🏥','🏖️','🏔️','🌋','🗼','🗽','🎡','🎢','🎠','🎪','🎭','🎨','🖼️','📚','📖','✏️','🖊️','🎒','💻','📱','⌚','🎁','🎈','🎉','🔑','💡','🔦','🧸','🪀','⚽','🏀','🎮','🧩','🎯','🎸','🎹','🥁'],
+    '🌸': ['🌸','🌼','🌻','🌺','🌹','🌷','🌱','🌿','🍀','🎋','🍃','🍂','🍁','🌾','🌵','🎄','🌲','🌳','🌴','🌊','🌈','☀️','🌙','⭐','❄️','🌬️','🌀','⛅','🌧️','⛈️','🌩️','🌨️','🌍','🌏'],
+    '✈️': ['✈️','🚀','🚂','🚗','🚕','🚌','🚎','🏎️','🚓','🚑','🚒','🚐','🛻','🚚','🛵','🚲','🛴','🛺','⛵','🚤','🛥️','🛳️','🚁','🛸','🪂','⛽','🚦','🗺️','🧭'],
+  },
+};
+
+(function initEmojiPicker() {
+  const wrap    = document.getElementById('ep-wrap');
+  const catBar  = document.getElementById('ep-cats');
+  const grid    = document.getElementById('ep-grid');
+  const search  = document.getElementById('ep-search');
+
+  // Build category tabs
+  const cats = [['all','🌐'], ...Object.entries(EP.data).map(([k]) => [k, k])];
+  catBar.innerHTML = cats.map(([k, label]) =>
+    `<button class="ep-cat${k==='all'?' active':''}" data-cat="${k}">${label}</button>`
+  ).join('');
+
+  function allEmojis() { return Object.values(EP.data).flat(); }
+
+  function renderGrid() {
+    const q    = search.value.trim();
+    const pool = EP.cat === 'all' ? allEmojis() : (EP.data[EP.cat] || []);
+    // Simple search: filter by position match against stringified emoji (limited but functional)
+    const list = q ? allEmojis().filter(e => e.includes(q)) : pool;
+    if (!list.length) { grid.innerHTML = '<div class="ep-empty">No results</div>'; return; }
+    grid.innerHTML = list.map(e => `<span class="ep-emoji" data-e="${e}">${e}</span>`).join('');
+  }
+
+  catBar.addEventListener('click', e => {
+    const btn = e.target.closest('.ep-cat');
+    if (!btn) return;
+    EP.cat = btn.dataset.cat;
+    catBar.querySelectorAll('.ep-cat').forEach(b => b.classList.toggle('active', b === btn));
+    search.value = '';
+    renderGrid();
+  });
+
+  grid.addEventListener('click', e => {
+    const el = e.target.closest('.ep-emoji');
+    if (!el) return;
+    document.getElementById('input-emoji').value = el.dataset.e;
+    wrap.classList.remove('open');
+  });
+
+  search.addEventListener('input', renderGrid);
+
+  document.getElementById('btn-emoji-pick').addEventListener('click', e => {
+    e.stopPropagation();
+    const opening = !wrap.classList.contains('open');
+    wrap.classList.toggle('open');
+    if (opening) { search.value = ''; EP.cat = 'all'; renderGrid(); catBar.querySelector('.ep-cat').classList.add('active'); catBar.querySelectorAll('.ep-cat:not(:first-child)').forEach(b => b.classList.remove('active')); setTimeout(() => search.focus(), 50); }
+  });
+
+  document.addEventListener('click', e => {
+    if (!e.target.closest('#ep-wrap') && !e.target.closest('#btn-emoji-pick')) {
+      wrap.classList.remove('open');
+    }
+  });
+
+  renderGrid();
+})();
 
 // ─────────────────────────────────────────────
 //  Init
